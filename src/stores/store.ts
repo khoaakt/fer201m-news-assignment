@@ -2,6 +2,8 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import navigationReducer from './navigation-slice'
 import newsReducer from './news-slice'
+import readerReducer from './reader-slice'
+import historyReducer from './history-slice'
 
 import { persistStore, persistReducer, FLUSH, REHYDRATE, 
          PAUSE, PERSIST, PURGE, REGISTER, 
@@ -15,14 +17,16 @@ const persistConfig = {
 
 // save state into local storage
 const rootReducer = combineReducers({
-  navigation: navigationReducer,
-  news: newsReducer,
+  history: historyReducer
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
   reducer: {
     persistedReducer,
+    reader: readerReducer,
+    navigation: navigationReducer,
+    news: newsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

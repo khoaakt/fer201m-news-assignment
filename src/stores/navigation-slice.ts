@@ -1,11 +1,10 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit"
 
 const navigationSlice = createSlice({
     name: 'navigation',
     initialState: {
         data: {
-            currentCategory: null,
-            currentSearch: "",
+            currentCategory: 'general',
         }
     },  
     reducers: {

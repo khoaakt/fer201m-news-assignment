@@ -1,17 +1,30 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { Stack, Chip } from '@mui/material';
+import { ApiNewsCategory } from 'ts-newsapi/lib/types';
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentCategory } from '../../stores/navigation-slice';
+import { loadCategory } from '../../stores/news-slice';
 
 const categoryList = ['business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology']
 
-export default function CategoryBar(props: any) {
-    return (
-        <Box sx={{ width: '100%', height: 80 }}>
+export default function CategoryBar() {
+    const dispatch = useDispatch<any>();
+    const currentCategory: ApiNewsCategory = useSelector(
+        (state: any) => state.navigation?.data.currentCategory
+    );
 
-        </Box>
+    return (
+        <Stack direction="row" sx={{marginBottom: 4}} spacing={1}>
+            {
+                categoryList.map((category => {
+                    return (
+                        // @ts-ignore - Ignore ts error on String prototype capitalize function.
+                        <Chip key={category} label={category.capitalize()} variant={currentCategory === category ? "filled": "outlined"} onClick={() => {
+                            dispatch(setCurrentCategory(category))
+                            dispatch(loadCategory({ category, currentPage: 1 }))
+                        }}/>
+                    )
+                }))
+            }
+      </Stack>
     );
 }

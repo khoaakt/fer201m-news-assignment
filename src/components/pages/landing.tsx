@@ -1,44 +1,63 @@
 import { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { useDispatch } from "react-redux";
-import { setNewsList } from '../../stores/news-slice';
-import { getHeadlines } from '../../utils';
+import { loadCategory, loadNewPage } from '../../stores/news-slice';
+import { setCurrentNews, setOpenReader } from '../../stores/reader-slice';
+import { getNewsData } from '../../utils';
 import { useSelector } from "react-redux";
-import { INewsApiArticle } from 'ts-newsapi/lib/types';
-import { Grid } from '@mui/material';
+import { ApiNewsCategory, INewsApiArticle } from 'ts-newsapi/lib/types';
+import { CircularProgress, Grid } from '@mui/material';
 import CardItem from '../landing/card-item';
+import CategoryBar from '../landing/category-bar';
+import { useBottomScrollListener } from 'react-bottom-scroll-listener';
 
-export default function Landing(props: any) {
-    const dispatch = useDispatch();
-    const newsList: INewsApiArticle[] = useSelector(
-        (state: any) => state.persistedReducer.news?.data.newsList
+export default function Landing() {
+    const dispatch = useDispatch<any>();
+    const currentCategory: ApiNewsCategory = useSelector(
+        (state: any) => state.navigation?.data.currentCategory
     );
+    const newsList: INewsApiArticle[] = useSelector(
+        (state: any) => state.news?.data.newsList
+    );
+    const currentPage: number = useSelector(
+        (state: any) => state.news?.data.currentPage
+    );
+    const isLoadingNext: number = useSelector(
+        (state: any) => state.news?.data.isLoadingNext
+    );
+
+    const getCategoryToFetch = () => { return currentCategory ? currentCategory : 'general' }
+
+    useBottomScrollListener(() => {
+        dispatch(loadNewPage({ category: getCategoryToFetch(), currentPage: currentPage + 1 }))
+    });
 
     useEffect(() => {
         (async () => {
-            const data = await getHeadlines('', 'general', 0);
-            dispatch(setNewsList(data.articles))
+            dispatch(loadCategory({ category: getCategoryToFetch(), currentPage: 1 }))
         })();
     }, [])
 
+    const onShowNewsClick = async (url: string) => {
+        dispatch(setOpenReader(true))
+        dispatch(setCurrentNews({}))
+        const result = await getNewsData(url)
+        dispatch(setCurrentNews(result))
+    }
+
     return (
         <Box sx={{ margin: 4 }}>
-            <Grid container spacing={6}>
-                {
+            <CategoryBar />
+            <Grid container sx={{top: 10}} spacing={2}>
+                { newsList &&
                     newsList.map(data => {
-                        return (<CardItem data={data} showNews={(url) => {
-                            const requestOptions = {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ url })
-                            };
-                            fetch('http://localhost:3001/', requestOptions)
-                                .then(response => response.json())
-                                .then(data => console.log(data));
-                        }} />)
+                        return (<CardItem data={data} showNews={onShowNewsClick} />)
                     })
                 }
             </Grid>
+            <Box sx={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                { isLoadingNext && <CircularProgress /> }
+            </Box>
         </Box>
     );
 }
